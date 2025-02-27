@@ -1,46 +1,41 @@
-import mongoose, { Document, Model, Schema, Types } from 'mongoose';
-import bcrypt from 'bcryptjs';
+import mongoose, { Document, Schema, Types, Model } from "mongoose";
+import bcrypt from "bcryptjs";
 
-// **Define the User Interface**
+// User Roles
+export type Role = "admin" | "manager" | "user";
+
+// User Interface
 export interface IUser extends Document {
-    _id: Types.ObjectId;  // ✅ Explicitly define _id to prevent type errors
-    name: string;
-    email: string;
-    role: 'user' | 'manager' | 'admin';
-    password: string;
-    resetPasswordToken?: string;
-    resetPasswordExpires?: Date;
-    comparePassword: (password: string) => Promise<boolean>;
+  _id: Types.ObjectId;
+  name: string;
+  email: string;
+  password: string;
+  tenant: Types.ObjectId; // ✅ User belongs to a tenant
+  role: Role; // ✅ Role within the tenant
+  comparePassword: (password: string) => Promise<boolean>;
 }
 
-// **Define the User Schema**
+// User Schema
 const UserSchema: Schema<IUser> = new Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    role: { type: String, required: true, enum: ['user', 'manager', 'admin'] },
-    password: { type: String, required: true },
-    resetPasswordToken: { type: String },
-    resetPasswordExpires: { type: Date },
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true, select: false },
+  tenant: { type: Schema.Types.ObjectId, ref: "Tenant", required: true }, // ✅ Reference to tenant
+  role: { type: String, enum: ["admin", "manager", "user"], required: true },
 });
 
-// **Middleware: Hash password before saving**
-UserSchema.pre<IUser>('save', async function (next) {
-    if (!this.isModified('password')) return next();
-    try {
-        const salt = await bcrypt.genSalt(10);
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (error) {
-        next(error as Error);
-    }
+// Hash Password Before Saving
+UserSchema.pre<IUser>("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
-// **Method: Compare Password**
+// Compare Password
 UserSchema.methods.comparePassword = async function (password: string): Promise<boolean> {
-    return bcrypt.compare(password, this.password);
+  return bcrypt.compare(password, this.password);
 };
 
-// **Export Model - Ensure Reuse to Prevent Overwrite Issues**
-const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
-
+const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
 export default User;

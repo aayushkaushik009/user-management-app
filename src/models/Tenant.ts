@@ -1,17 +1,23 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Types, Model } from "mongoose";
 
-interface ITenant extends Document {
-    name: string;
-    email: string;
-    phone: string;
-    address: string;
+// Tenant Interface
+export interface ITenant extends Document {
+  _id: Types.ObjectId;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  users: Types.ObjectId[]; // ✅ List of users belonging to the tenant
 }
 
-const TenantSchema: Schema = new Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    phone: { type: String, required: true },
-    address: { type: String, required: true },
+// Tenant Schema
+const TenantSchema: Schema<ITenant> = new Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  phone: { type: String, required: true },
+  address: { type: String, required: true },
+  users: [{ type: Schema.Types.ObjectId, ref: "User" }], // ✅ Reference to users
 });
 
-export default mongoose.models.Tenant || mongoose.model<ITenant>('Tenant', TenantSchema);
+const Tenant: Model<ITenant> = mongoose.models.Tenant || mongoose.model<ITenant>("Tenant", TenantSchema);
+export default Tenant;
