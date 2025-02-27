@@ -1,45 +1,39 @@
-# User Management Application
+# 🛠️ User Management Application
 
-This is a user management application built with Next.js and NextAuth.js. It provides features for user authentication, tenant management, role-based access control, and password management.
+A full-stack User Management System built with **Next.js** and **NextAuth.js**, featuring multi-tenant support, role-based access control, and secure authentication.
 
-## Features
+## 🚀 Features
 
-- **User Authentication**
-  - User registration with email verification.
-  - Login using email and password.
-  - Social authentication (Google, Facebook).
-  - User logout functionality.
+### 🔐 Authentication
+- User registration with email verification.
+- Login using email & password or **Google Authentication**.
+- Secure password reset via email.
+- Session-based authentication with JWT tokens.
 
-- **Tenant Management**
-  - Create, edit, and delete tenants.
-  - Users can belong to one or more tenants.
+### 🏢 Tenant Management
+- Create, update, and delete tenants.
+- Users can belong to multiple tenants.
 
-- **Role-Based Access Control (RBAC)**
-  - Define roles (admin, manager, user) with different access levels.
-  - Assign roles to users within a tenant.
-  - Restrict access based on user roles and permissions.
+### 🎭 Role-Based Access Control (RBAC)
+- Define roles: **Admin, Manager, User**.
+- Assign different permissions per role.
 
-- **Permission Management (Optional)**
-  - Define and manage permissions associated with roles.
+### 🔑 Password Management
+- Request a password reset link.
+- Secure password hashing.
 
-- **Password Management**
-  - Request password reset link via email.
-  - Secure password reset functionality.
+---
 
-## Technologies Used
+## 🏗️ Tech Stack
 
-- **Frontend**: Next.js (version 13+)
-- **Authentication**: NextAuth.js
-- **Database**: MongoDB with Mongoose
-- **Styling**: CSS Modules and global styles
+| **Technology**      | **Purpose**                         |
+|---------------------|------------------------------------|
+| **Next.js**        | Full-stack React framework        |
+| **NextAuth.js**    | Authentication & session handling |
+| **MongoDB + Mongoose** | Database & ORM                 |
+| **Tailwind CSS**   | Styling framework                 |
+| **Clerk (Optional)** | Authentication provider          |
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js (version 14 or higher)
-- MongoDB (local or cloud instance)
-- Git
 
 ### Installation
 
