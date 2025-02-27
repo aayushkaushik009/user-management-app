@@ -163,46 +163,86 @@ type RoleType = "admin" | "manager" | "user";
  * ✅ Sends a password reset email with a secure token.
  * @param email User's email address
  */
+
 export const sendPasswordResetEmail = async (email: string): Promise<void> => {
-  await connectToDatabase();
+    const user = await User.findOne({ email });
+    if (!user || !user.resetPasswordToken) {
+        throw new Error("No reset token found for this user.");
+    }
 
-  const user = await User.findOne({ email });
-  if (!user) throw new Error("User with this email does not exist.");
+    const resetLink = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${user.resetPasswordToken}`;
 
-  // Generate a secure random token
-  const resetToken = crypto.randomBytes(32).toString("hex");
-  user.resetPasswordToken = resetToken;
-  user.resetPasswordExpires = new Date(Date.now() + 3600000); // Token valid for 1 hour
-  await user.save();
+    const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: Number(process.env.EMAIL_PORT),
+        secure: process.env.EMAIL_PORT === "465", // Enable SSL for port 465
+        auth: {
+            user: process.env.EMAIL_USERNAME,
+            pass: process.env.EMAIL_PASSWORD,
+        },
+    });
 
-  const resetLink = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${resetToken}`;
+    const mailOptions = {
+        from: process.env.EMAIL_FROM || "no-reply@example.com",
+        to: email,
+        subject: "Password Reset Request",
+        text: `Click the following link to reset your password: ${resetLink}`,
+        html: `<p>Click <a href="${resetLink}">here</a> to reset your password.</p>`,
+    };
 
-  // ✅ Configure Nodemailer
-  const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: Number(process.env.EMAIL_PORT),
-    auth: {
-      user: process.env.EMAIL_USERNAME,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-  });
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "Password Reset Request",
-    text: `Click the following link to reset your password: ${resetLink}`,
-    html: `<p>Click <a href="${resetLink}">here</a> to reset your password.</p>`,
-  };
-
-  // ✅ Send email & handle errors
-  try {
-    await transporter.sendMail(mailOptions);
-  } catch (error) {
-    console.error("Error sending password reset email:", error);
-    throw new Error("Error sending password reset email.");
-  }
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`✅ Password reset email sent to ${email}`);
+    } catch (error) {
+        console.error("❌ Error sending password reset email:", error);
+        throw new Error("Error sending password reset email. Please try again.");
+    }
 };
+// export const sendPasswordResetEmail = async (email: string): Promise<void> => {
+//     await connectToDatabase();
+  
+//     const user = await User.findOne({ email });
+//     if (!user) throw new Error("User with this email does not exist.");
+  
+//     // Generate a secure random token & hash it before storing
+//     const resetToken = crypto.randomBytes(32).toString("hex");
+//     const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+  
+//     // Store hashed token in DB (prevents exposure if DB is compromised)
+//     user.resetPasswordToken = hashedToken;
+//     user.resetPasswordExpires = new Date(Date.now() + 3600000); // Token valid for 1 hour
+//     await user.save();
+  
+//     // Construct secure reset link
+//     const resetLink = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${resetToken}`;
+  
+//     // ✅ Nodemailer Config with error handling
+//     const transporter = nodemailer.createTransport({
+//       host: process.env.EMAIL_HOST,
+//       port: Number(process.env.EMAIL_PORT),
+//       secure: process.env.EMAIL_PORT === "465", // Use secure mode for port 465
+//       auth: {
+//         user: process.env.EMAIL_USERNAME,
+//         pass: process.env.EMAIL_PASSWORD,
+//       },
+//     });
+  
+//     const mailOptions = {
+//       from: process.env.EMAIL_FROM || "no-reply@example.com",
+//       to: email,
+//       subject: "Password Reset Request",
+//       text: `Click the following link to reset your password: ${resetLink}`,
+//       html: `<p>Click <a href="${resetLink}">here</a> to reset your password.</p>`,
+//     };
+  
+//     try {
+//       await transporter.sendMail(mailOptions);
+//       console.log(`✅ Password reset email sent to ${email}`);
+//     } catch (error) {
+//       console.error("❌ Error sending password reset email:", error);
+//       throw new Error("Error sending password reset email. Please try again.");
+//     }
+//   };
 
 /**
  * ✅ Checks if the user is authenticated & returns session details.
